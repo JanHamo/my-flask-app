@@ -171,6 +171,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return handleError(res, error);
     }
   });
+  
+  // New endpoint for latest gold news with sentiment analysis
+  app.get("/api/latest-gold-news", async (_req: Request, res: Response) => {
+    try {
+      // Get the latest 10 articles from the database
+      const latestArticles = await storage.getArticles(10, 0);
+      
+      // Format the response data
+      const formattedArticles = latestArticles.map(article => ({
+        id: article.id,
+        title: article.title,
+        publishedAt: article.publishedAt,
+        sentiment: article.sentiment
+      }));
+      
+      return res.json({ articles: formattedArticles });
+    } catch (error) {
+      return handleError(res, error);
+    }
+  });
 
   // Get article by ID
   app.get("/api/articles/:id", async (req: Request, res: Response) => {

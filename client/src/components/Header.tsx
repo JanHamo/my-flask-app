@@ -66,6 +66,15 @@ export function Header({ onSearch }: HeaderProps) {
             </svg>
           </div>
           
+          <Link href="/latest-news">
+            <a className={cn(
+              "p-2 hover:text-gold transition-colors hidden md:inline-block",
+              location === "/latest-news" ? "text-gold" : "text-gray-600 dark:text-gray-300"
+            )}>
+              <span className="text-sm font-medium">Latest News</span>
+            </a>
+          </Link>
+          
           <Link href="/favorites">
             <a className={cn(
               "p-2 hover:text-gold transition-colors",
