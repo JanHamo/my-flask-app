@@ -5,6 +5,7 @@ description = "Add your description here"
 requires-python = ">=3.11"
 dependencies = [
     "nltk>=3.9.1",
+    "psycopg2-binary>=2.9.10",
 ]
 
 [[tool.uv.index]]
