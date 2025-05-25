@@ -87,19 +87,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Map the API response to our schema and save to storage
-      const articleData = response.data.articles.map((article: NewsApiArticle) => ({
-        title: article.title,
-        description: article.description || "",
-        url: article.url,
-        urlToImage: article.urlToImage || "",
-        publishedAt: new Date(article.publishedAt),
-        source: article.source.name,
-        sourceId: article.source.id || "",
-        category: determineCategoryFromTitle(article.title),
-        content: article.content || "",
-        author: article.author || "",
-        sentiment: analyzeSentiment(article.title, article.description || "")
-      }));
+      const articleData = [];
+      
+      // Process articles one by one to handle async sentiment analysis
+      for (const article of response.data.articles) {
+        // First determine sentiment (async operation)
+        const sentiment = await analyzeSentiment(article.title, article.description || "");
+        
+        // Then create the article object with all fields
+        articleData.push({
+          title: article.title,
+          description: article.description || "",
+          url: article.url,
+          urlToImage: article.urlToImage || "",
+          publishedAt: new Date(article.publishedAt),
+          source: article.source.name,
+          sourceId: article.source.id || "",
+          category: determineCategoryFromTitle(article.title),
+          content: article.content || "",
+          author: article.author || "",
+          sentiment: sentiment // Now this is a string, not a Promise
+        });
+      }
       
       // Save articles to storage
       const validatedArticles = articleData.map(article => insertArticleSchema.parse(article));
