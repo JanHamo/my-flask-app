@@ -1,10 +1,13 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage";
 import { insertArticleSchema, SearchParams, NewsApiResponse, NewsApiArticle } from "@shared/schema";
 import axios from "axios";
 import { ZodError } from "zod";
 import { spawn } from "child_process";
+import { DatabaseStorage } from "./db-storage";
+
+// Initialize the database storage
+const storage = new DatabaseStorage();
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Start sentiment analysis server
