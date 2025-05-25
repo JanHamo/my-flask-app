@@ -41,13 +41,16 @@ def get_sentiment_scores(text):
     sid = SentimentIntensityAnalyzer()
     scores = sid.polarity_scores(text)
     
-    # Add classification
+    # Add classification as a string
+    classification = ""
     if scores['compound'] >= 0.05:
-        scores['classification'] = 'positive'
+        classification = 'positive'
     elif scores['compound'] <= -0.05:
-        scores['classification'] = 'negative'
+        classification = 'negative'
     else:
-        scores['classification'] = 'neutral'
+        classification = 'neutral'
+    
+    scores['classification'] = classification
     
     return scores
 

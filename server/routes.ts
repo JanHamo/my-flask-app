@@ -1,11 +1,34 @@
-import type { Express, Request, Response } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertArticleSchema, SearchParams, NewsApiResponse, NewsApiArticle } from "@shared/schema";
 import axios from "axios";
 import { ZodError } from "zod";
+import { spawn } from "child_process";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Start sentiment analysis server
+  try {
+    console.log("Starting sentiment analysis service...");
+    const sentimentServer = spawn('python3', ['server/sentiment_api.py']);
+    
+    sentimentServer.stdout.on('data', (data) => {
+      console.log(`Sentiment server: ${data}`);
+    });
+    
+    sentimentServer.stderr.on('data', (data) => {
+      console.error(`Sentiment server error: ${data}`);
+    });
+    
+    sentimentServer.on('close', (code) => {
+      console.log(`Sentiment server process exited with code ${code}`);
+    });
+    
+    // Give it a moment to start
+    await new Promise(resolve => setTimeout(resolve, 1000));
+  } catch (error) {
+    console.error("Failed to start sentiment analysis service:", error);
+  }
   // Helper to handle API errors
   const handleError = (res: Response, error: unknown) => {
     console.error("API Error:", error);
@@ -308,26 +331,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       };
       
-      // Try to use NLTK sentiment analysis
+      // Try to use our sentiment analysis service
       try {
-        const { execSync } = require('child_process');
-        
-        // Escape the text to prevent command injection
-        const escapedText = combinedText.replace(/"/g, '\\"');
-        
-        // Call the Python script with the text
-        const result = execSync(`python3 server/sentiment.py "${escapedText}"`).toString();
-        const sentimentData = JSON.parse(result);
+        // Call the sentiment analysis API
+        const sentimentResponse = await axios.post('http://localhost:8001', {
+          text: combinedText
+        });
         
         // Return the classification
-        if (sentimentData && sentimentData.classification) {
-          return sentimentData.classification;
+        if (sentimentResponse.data && sentimentResponse.data.classification) {
+          return sentimentResponse.data.classification;
         } else {
           return simpleSentimentAnalysis();
         }
       } catch (error) {
-        console.error("Error using Python sentiment analysis:", error);
-        return simpleSentimentAnalysis();
+        console.error("Error using sentiment analysis service:", error);
+        
+        // Fall back to using direct Python script execution
+        try {
+          const { execSync } = require('child_process');
+          
+          // Escape the text to prevent command injection
+          const escapedText = combinedText.replace(/"/g, '\\"');
+          
+          // Call the Python script with the text
+          const result = execSync(`python3 server/sentiment.py "${escapedText}"`).toString();
+          const sentimentData = JSON.parse(result);
+          
+          // Return the classification
+          if (sentimentData && sentimentData.classification) {
+            return sentimentData.classification;
+          } else {
+            return simpleSentimentAnalysis();
+          }
+        } catch (pythonError) {
+          console.error("Error using Python sentiment analysis:", pythonError);
+          return simpleSentimentAnalysis();
+        }
       }
     } catch (error) {
       console.error("Error in sentiment analysis:", error);
