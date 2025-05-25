@@ -33,10 +33,8 @@ export function Header({ onSearch }: HeaderProps) {
             <path d="M20 7h-3a2 2 0 0 1-2-2V2"></path>
             <path d="M16 2H4a2 2 0 0 0-2 2v15a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7Z"></path>
           </svg>
-          <Link href="/">
-            <a className="text-2xl font-bold text-navy-default dark:text-white">
-              Gold<span className="text-gold">News</span>
-            </a>
+          <Link href="/" className="text-2xl font-bold text-navy-default dark:text-white">
+            Gold<span className="text-gold">News</span>
           </Link>
         </div>
         

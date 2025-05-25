@@ -273,32 +273,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   }
 
-  function analyzeSentiment(title: string, description: string): string {
-    const combinedText = (title + " " + description).toLowerCase();
-    
-    const positiveTerms = ["surge", "rise", "gain", "rally", "boost", "positive", "bullish", "soar", "jump", "climb", "growth", "recovery", "uptrend"];
-    const negativeTerms = ["drop", "fall", "decline", "crash", "bearish", "negative", "plunge", "slump", "tumble", "dip", "decrease", "downtrend", "fear"];
-    
-    let positiveScore = 0;
-    let negativeScore = 0;
-    
-    for (const term of positiveTerms) {
-      if (combinedText.includes(term)) {
-        positiveScore++;
+  async function analyzeSentiment(title: string, description: string): Promise<string> {
+    try {
+      // Combine title and description for analysis
+      const combinedText = title + " " + description;
+      
+      // Use the simple keyword-based approach as a fallback
+      const simpleSentimentAnalysis = () => {
+        const text = combinedText.toLowerCase();
+        const positiveTerms = ["surge", "rise", "gain", "rally", "boost", "positive", "bullish", "soar", "jump", "climb", "growth", "recovery", "uptrend"];
+        const negativeTerms = ["drop", "fall", "decline", "crash", "bearish", "negative", "plunge", "slump", "tumble", "dip", "decrease", "downtrend", "fear"];
+        
+        let positiveScore = 0;
+        let negativeScore = 0;
+        
+        for (const term of positiveTerms) {
+          if (text.includes(term)) {
+            positiveScore++;
+          }
+        }
+        
+        for (const term of negativeTerms) {
+          if (text.includes(term)) {
+            negativeScore++;
+          }
+        }
+        
+        if (positiveScore > negativeScore) {
+          return "positive";
+        } else if (negativeScore > positiveScore) {
+          return "negative";
+        } else {
+          return "neutral";
+        }
+      };
+      
+      // Try to use NLTK sentiment analysis
+      try {
+        const { execSync } = require('child_process');
+        
+        // Escape the text to prevent command injection
+        const escapedText = combinedText.replace(/"/g, '\\"');
+        
+        // Call the Python script with the text
+        const result = execSync(`python3 server/sentiment.py "${escapedText}"`).toString();
+        const sentimentData = JSON.parse(result);
+        
+        // Return the classification
+        if (sentimentData && sentimentData.classification) {
+          return sentimentData.classification;
+        } else {
+          return simpleSentimentAnalysis();
+        }
+      } catch (error) {
+        console.error("Error using Python sentiment analysis:", error);
+        return simpleSentimentAnalysis();
       }
-    }
-    
-    for (const term of negativeTerms) {
-      if (combinedText.includes(term)) {
-        negativeScore++;
-      }
-    }
-    
-    if (positiveScore > negativeScore) {
-      return "positive";
-    } else if (negativeScore > positiveScore) {
-      return "negative";
-    } else {
+    } catch (error) {
+      console.error("Error in sentiment analysis:", error);
       return "neutral";
     }
   }

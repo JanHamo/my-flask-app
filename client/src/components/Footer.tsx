@@ -23,10 +23,10 @@ export function Footer() {
           <div>
             <h3 className="text-gold font-medium mb-4">Quick Links</h3>
             <ul className="space-y-2 text-sm text-gray-300">
-              <li><Link href="/"><a className="hover:text-gold">Home</a></Link></li>
-              <li><Link href="/?tab=latest"><a className="hover:text-gold">Latest News</a></Link></li>
-              <li><Link href="/?tab=analysis"><a className="hover:text-gold">Market Analysis</a></Link></li>
-              <li><Link href="/?category=investment"><a className="hover:text-gold">Investment Guides</a></Link></li>
+              <li><Link href="/" className="hover:text-gold">Home</Link></li>
+              <li><Link href="/?tab=latest" className="hover:text-gold">Latest News</Link></li>
+              <li><Link href="/?tab=analysis" className="hover:text-gold">Market Analysis</Link></li>
+              <li><Link href="/?category=investment" className="hover:text-gold">Investment Guides</Link></li>
               <li><a href="#" className="hover:text-gold">Price Charts</a></li>
             </ul>
           </div>
